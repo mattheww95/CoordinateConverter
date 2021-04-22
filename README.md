@@ -1,3 +1,5 @@
+Mainly for Ruth at this point
+
 Look up table conversion information was sourced from:  
 URL: https://observablehq.com/@delphine-l/coordinate-conversion-between-species-of-coronavirus  
 Author: Delphine Lariviere  
