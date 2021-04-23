@@ -3,7 +3,8 @@ import sys
 
 
 pd.set_option('display.max_columns', 10)
-df = pd.read_csv("information/ref_info.csv")
+df = pd.read_csv("../information/ref_info.csv")
+df2 = pd.read_csv("../information/calculated_AA_and_nuc.csv", index_col=0)
 
 ref_genome = "ATTAAAGGTTTATACCTTCCCAGGTAACAAACCAACCAACTTTCGATCTCTTGTAGATCTGTTCTCTAAA" \
              "CGAACTTTAAAATCTGTGTGGCTGTCACTCGGCTGCATGCTTAGTGCACTCACGCAGTATAATTAATAAC" \
@@ -435,30 +436,40 @@ ref_genome = "ATTAAAGGTTTATACCTTCCCAGGTAACAAACCAACCAACTTTCGATCTCTTGTAGATCTGTTCTC
              "AAAAAAAAAAAAA"
 
 codons = {
-        'ATA': 'I', 'ATC': 'I', 'ATT': 'I', 'ATG': 'M',
-        'ACA': 'T', 'ACC': 'T', 'ACG': 'T', 'ACT': 'T',
-        'AAC': 'N', 'AAT': 'N', 'AAA': 'K', 'AAG': 'K',
-        'AGC': 'S', 'AGT': 'S', 'AGA': 'R', 'AGG': 'R',
-        'CTA': 'L', 'CTC': 'L', 'CTG': 'L', 'CTT': 'L',
-        'CCA': 'P', 'CCC': 'P', 'CCG': 'P', 'CCT': 'P',
-        'CAC': 'H', 'CAT': 'H', 'CAA': 'Q', 'CAG': 'Q',
-        'CGA': 'R', 'CGC': 'R', 'CGG': 'R', 'CGT': 'R',
-        'GTA': 'V', 'GTC': 'V', 'GTG': 'V', 'GTT': 'V',
-        'GCA': 'A', 'GCC': 'A', 'GCG': 'A', 'GCT': 'A',
-        'GAC': 'D', 'GAT': 'D', 'GAA': 'E', 'GAG': 'E',
-        'GGA': 'G', 'GGC': 'G', 'GGG': 'G', 'GGT': 'G',
-        'TCA': 'S', 'TCC': 'S', 'TCG': 'S', 'TCT': 'S',
-        'TTC': 'F', 'TTT': 'F', 'TTA': 'L', 'TTG': 'L',
-        'TAC': 'Y', 'TAT': 'Y', 'TAA': '_', 'TAG': '_',
-        'TGC': 'C', 'TGT': 'C', 'TGA': '_', 'TGG': 'W',
+        'ATA': 'I Ile', 'ATC': 'I Ile', 'ATT': 'I Ile', 'ATG': 'M Met',
+        'ACA': 'T Thr', 'ACC': 'T Thr', 'ACG': 'T Thr', 'ACT': 'T Thr',
+        'AAC': 'N Asn', 'AAT': 'N Asn', 'AAA': 'K Lys', 'AAG': 'K Lys',
+        'AGC': 'S Ser', 'AGT': 'S Ser', 'AGA': 'R Arg', 'AGG': 'R Arg',
+        'CTA': 'L Leu', 'CTC': 'L Leu', 'CTG': 'L Leu', 'CTT': 'L Leu',
+        'CCA': 'P Pro', 'CCC': 'P Pro', 'CCG': 'P Pro', 'CCT': 'P Pro',
+        'CAC': 'H His', 'CAT': 'H His', 'CAA': 'Q Gln', 'CAG': 'Q Gln',
+        'CGA': 'R Arg', 'CGC': 'R Arg', 'CGG': 'R Arg', 'CGT': 'R Arg',
+        'GTA': 'V Val', 'GTC': 'V Val', 'GTG': 'V Val', 'GTT': 'V Val',
+        'GCA': 'A Ala', 'GCC': 'A Ala', 'GCG': 'A Ala', 'GCT': 'A Ala',
+        'GAC': 'D Asp', 'GAT': 'D Asp', 'GAA': 'E Glu', 'GAG': 'E Glu',
+        'GGA': 'G Gly', 'GGC': 'G Gly', 'GGG': 'G Gly', 'GGT': 'G Gly',
+        'TCA': 'S Ser', 'TCC': 'S Ser', 'TCG': 'S Ser', 'TCT': 'S Ser',
+        'TTC': 'F Phe', 'TTT': 'F Phe', 'TTA': 'L Leu', 'TTG': 'L Leu',
+        'TAC': 'Y Tyr', 'TAT': 'Y Tyr', 'TAA': '_', 'TAG': '_',
+        'TGC': 'C Cys', 'TGT': 'C Cys', 'TGA': '_', 'TGG': 'W Trp',
 }
+
+
+# May be easier to map NSP genes in here
+# NSP12 is two peptides 13442, 13468 and 13468 to 16236
+nonstructural_polyproteins = {"nsp1": [266, 805], "nsp2": [806, 2719], "nsp3": [2720, 8554], "nsp4": [8555, 10054],
+                              "nsp5": [10055, 10972], "nsp6": [10973, 11842], "nsp7": [11843, 12091],
+                              "nps8": [12092, 12685], "nsp9": [12686, 13024], "nsp10": [13025, 13441],
+                              "nsp12": [13442, 16236], "nsp13": [16237, 18039], "nsp14": [18040, 19620],
+                              "nsp15": [19621, 20658], "nsp16": [20659, 21552]}
 
 
 def main():
     value_to_search = 0
     while value_to_search < 29999:
-        print("\nEnter 1 to look up a reference codon or \n2 to look up a corresponding base change,")
-        c_flow_decoder = input("Enter 1 or 2: ")
+        print("\nEnter 1 to look up a reference codon or \n2 to look up a corresponding base change,"
+              "\n3 to look up a position within a gene")
+        c_flow_decoder = input("Enter 1, 2 or 3: ")
         if c_flow_decoder == "1":
             value_to_search = int(input("Please enter a genomic coordinate to search for: "))
             if value_to_search > 29999:
@@ -483,12 +494,26 @@ def main():
                 print(f"The value entered {look_up_cod}, could not be found. Please try entering something else\n")
             else:
                 print(f"You entered {look_up_cod}, which corresponds to {codons[look_up_cod]}\n")
+        elif c_flow_decoder == "3":
+            gene_to_search = input("Please enter the gene you are looking for: ")
+            gene_pos = input("Please enter its gene position: ")
+            df3 = df2.loc[df2["Current_Gene"] == gene_to_search]
+            if len(df3.index) >= 1:
+                df4 = df3.loc[df3["AminoAcid_position"] == gene_pos]
+                if len(df4.index) >= 1:
+                    print(df4)
+                else:
+                    print("Are you sure that position is within the gene you are looking for?")
+            else:
+                print("I could not find that gene old chap.")
+                print("Try again and pick from one of the following")
+                print("\nORF1ab\nS\nN\nM\nORF3a\nE\nORF6\nORF7a\nORF7b\nORF8\nORF10")
         else:
             exit_input = input("You have entered an invalid query, would you like to exit? y or n: ")
             if exit_input != "y":
                 pass
             else:
-                sys.exit("ʕ•ᴥ•ʔ Bye! ")
+                sys.exit("(👁 ͜ʖ👁) Bye.... ")
 
 
 if __name__ == "__main__":
